@@ -3,30 +3,33 @@ import { useEnemyStore } from "./enemy-store"
 
 interface ICurrentClass {
     globalCooldown: boolean,
+    currentCast?: IAction,
     className: string,
     gameName: string,
     actions: IAction[]
 }
 
 export interface IAction {
-    actionName: string,
-    damageType: "Instant" | "DoT"
-    abilityType: "GCD" | "OGCD"
-    castTime: number,
-    recastTime: number,
+    actionName?: string,
+    damageType?: "Cast" | "Instant" | "DoT"
+    abilityType?: "GCD" | "OGCD"
+    castTime?: number,
+    recastTime?: number,
     duration?: number,
-    hotkey: string
+    casting?: number,
+    hotkey?: string
 }
 
 export const useCurrentClassStore = defineStore('current-class', {
     state: (): ICurrentClass => ({
         globalCooldown: false,
+        currentCast: {},
         className: "White Mage (WHM)",
         gameName: "FFXIV",
         actions: [
             {
                 actionName: "Glare",
-                damageType: "Instant",
+                damageType: "Cast",
                 abilityType: "GCD",
                 castTime: 1.5,
                 recastTime: 2.5,
@@ -38,7 +41,7 @@ export const useCurrentClassStore = defineStore('current-class', {
                 abilityType: "GCD",
                 castTime: 0,
                 recastTime: 2.5,
-                duration: 15,
+                duration: 30,
                 hotkey: ""
             },
             {
@@ -55,10 +58,16 @@ export const useCurrentClassStore = defineStore('current-class', {
     getters: {},
     actions: {
         abilityUsed(action: IAction) {
-            if (this.globalCooldown == false || action.abilityType == "OGCD") {
+            if (this.globalCooldown == false || (this.currentCast.actionName == undefined && action.abilityType == "OGCD")) {
                 console.log(action.actionName, "used!")
                 if (action.damageType == "DoT") {
                     useEnemyStore().applyDebuff(action)
+                } else if (action.damageType == "Cast") {
+                    this.currentCast = action
+                }
+                
+                if (action.abilityType == "OGCD" && this.globalCooldown == true) {
+                    return
                 }
                 this.applyGCD()
             }
@@ -71,8 +80,8 @@ export const useCurrentClassStore = defineStore('current-class', {
                 console.log("GCD Over!")
             }, 2500);
         },
-        applyDebuff() {
-
+        resetCurrentCast() {
+            this.currentCast = {}
         }
     },
 })

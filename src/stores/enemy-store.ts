@@ -23,8 +23,7 @@ export const useEnemyStore = defineStore('enemy-store', {
                 debuffDuration: action.duration
             };
             if (this.debuffList.find((x: IDebuff) => x.debuffName == debuff.debuffName)) {
-                console.log("TRUE")
-                this.debuffList.splice(this.debuffList.indexOf(debuff.debuffName), 1)
+                return this.debuffList.find((x: IDebuff) => x.debuffName == debuff.debuffName).debuffDuration = action.duration
             }
             this.debuffList.push(debuff)
             this.debuffCountdown(debuff)
